@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.tralfamadore.locatable</string>
+	<key>Nice</key>
+	<integer>20</integer>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/libexec/relocatable/Relocatable</string>
+<!-- Daemon mode with interval 570 seconds (9.5 minutes) between updates -->
+		<string>-d</string>
+		<string>570</string>
+<!-- Spend 30 seconds getting each fix to allow for GPS to power up -->
+		<string>-t</string>
+		<string>30</string>
+<!--
+     If you want to execute a command for each fix,
+     include the following (replace run.sh with your command)
+                <string>-e</string>
+                <string>/myappdir/run.sh @lat@ @long@ @hacc@</string>
+-->
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+</dict>
+</plist>

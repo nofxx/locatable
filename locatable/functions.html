@@ -1,0 +1,94 @@
+<html>
+<head>
+<script type="text/javascript">
+var db = null;
+
+function initDB() {
+  try {
+    if (window.openDatabase) {
+      db = openDatabase('Locatable', '1.0', 'Locatable', 65536);
+      createTables(db);
+    }
+  } catch(e) {
+    if (e == 2 /* INVALID_STATE_ERR */) {
+      // Version number mismatch.
+      alert("Invalid database version.");
+    } else {
+      alert("Unknown error "+e+".");
+    }
+  }
+}
+
+function createTables_nullDataHandler(transaction, results) { 
+  /* done */ 
+  setReady();
+}
+function createTables_errorHandler(transaction, error) {
+  /* table exists */ 
+  setReady();
+}
+
+function createTables(db) {
+  db.transaction(
+    function (transaction) {
+      transaction.executeSql("CREATE TABLE location (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, tag TEXT NOT NULL, latitude DECIMAL(30,27) NOT NULL, longitude DECIMAL(30,27) NOT NULL, last_update TIMESTAMP);", []);
+      transaction.executeSql("CREATE TABLE preferences (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, domain TEXT, accuracy INTEGER NOT NULL, interval INTEGER NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, ask INTEGER NOT NULL DEFAULT 1);", []);
+      transaction.executeSql("INSERT INTO preferences (accuracy, interval, enabled, ask) VALUES (1000, 600, 1, 1);", []);
+    }, createTables_errorHandler, createTables_nullDataHandler
+  );
+}
+
+/* ------------------------------------------------- */
+
+var ready = 'NO';
+
+function unready() {
+//  ready = 'NO';
+ready = 'UNREADY';
+}
+
+function setReady() {
+ ready = 'YES';
+}
+
+function isReady() {
+  return ready;
+}
+
+/* Takes floats */
+function setPosition(lat,long) {
+  unready();
+  db.transaction(
+    function (transaction) {
+      transaction.executeSql("delete from location where tag = 'Current'",
+        []);
+      transaction.executeSql('insert into location (tag,latitude,longitude,'
+        + 'last_update) VALUES ("Current",' + lat + ',' + long
+        + ',DATETIME("NOW"));', []);
+    }, errorHandler, updateCompleted
+  );
+}
+
+/* Takes an integer for enabled/ask */
+function setDefaultPreferences(enabled, accuracy, interval, ask) {
+  unready();
+  db.transaction(
+    function (transaction) {
+      transaction.executeSql("update preferences set enabled = ?, accuracy = ?, interval = ?, ask = ? where domain is null",
+        [enabled, accuracy, interval, ask]);
+    }, errorHandler, updateCompleted
+  );
+}
+
+function updateCompleted(transaction, results) {
+  setReady();
+}
+
+function errorHandler(transaction, error) {
+  alert("Error #" + error.code + ": " + error.message);
+}
+</script>
+</head>
+<body onLoad="initDB()" bgcolor="#000000">
+</body>
+</html>
